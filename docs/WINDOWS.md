@@ -90,6 +90,13 @@ CPU snapshots older than 10 seconds or more than two seconds in the future are
 rejected. Read locks receive at most three 50 ms delays before returning unavailable.
 Do not use old sensor JSON files as a live source.
 
+The CPU writer retries Windows sharing/lock violations during atomic snapshot
+publication (up to ten attempts, 50 ms apart). If the file remains locked, it
+skips that publication and samples again on the next cycle instead of exiting.
+The last complete snapshot is preserved; the agent still rejects it once stale.
+Permission errors and other failures remain errors. Install an updated reader
+with `Installer_capteur_CPU.cmd`; replacing only the portable payload is not enough.
+
 The scheduled CPU reader runs without a console window. If CPU power and
 temperature both become unavailable, check that `ESP32Monitor-CPU-Temperature`
 is running in Task Scheduler. After updating an older console-style reader,

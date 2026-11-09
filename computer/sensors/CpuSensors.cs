@@ -23,14 +23,8 @@ class CpuSensors {
   if(n.Contains("core") && !n.Contains("ccd")) return 3;
   return 4;
  }
- static void Save(string file,object value) {
-  string full=Path.GetFullPath(file);
-  Directory.CreateDirectory(Path.GetDirectoryName(full));
-  string temp=full+"."+Guid.NewGuid().ToString("N")+".tmp";
-  try {
-   SensorFileSecurity.WriteNew(temp,new JavaScriptSerializer().Serialize(value));
-   if(File.Exists(full)) File.Replace(temp,full,null); else File.Move(temp,full);
-  } finally {if(File.Exists(temp)) File.Delete(temp);}
+ static bool Save(string file,object value) {
+  return SnapshotPublisher.TrySave(file,new JavaScriptSerializer().Serialize(value),SensorFileSecurity.WriteNew);
  }
  public static int Main(string[] args) {
   bool once=args.Contains("--once");
@@ -73,13 +67,16 @@ class CpuSensors {
      {"temperature_sensors",values},
      {"source","LibreHardwareMonitor 0.9.6"}
     };
-    Save(file,result);
+    // A persistent sharing lock skips this sample, not the sensor process.
+    // The next iteration samples again; consumers still reject stale data.
+    if(!Save(file,result) && once) return 2;
     if(once) Console.WriteLine(new JavaScriptSerializer().Serialize(result));
     if(!once) Thread.Sleep(2000);
    } while(!once);
    return 0;
   } catch(Exception e) {
-   Save(file,new Dictionary<string,object>{{"cpu_temperature_c",null},{"cpu_power_w",null},{"error",e.ToString()},{"updated_at_unix",DateTimeOffset.UtcNow.ToUnixTimeSeconds()}});
+   try {Save(file,new Dictionary<string,object>{{"cpu_temperature_c",null},{"cpu_power_w",null},{"error",e.ToString()},{"updated_at_unix",DateTimeOffset.UtcNow.ToUnixTimeSeconds()}});}
+   catch(IOException) {} catch(UnauthorizedAccessException) {}
    if(once) Console.Error.WriteLine(e);
    return 1;
   } finally {computer.Close();if(mutex!=null) mutex.Dispose();}

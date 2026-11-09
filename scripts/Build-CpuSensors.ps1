@@ -18,6 +18,6 @@ foreach($dependency in Get-ChildItem -LiteralPath $libraryDirectory -Filter '*.d
 $compiler=Join-Path $env:SystemRoot 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 if(-not (Test-Path -LiteralPath $compiler)){throw '.NET Framework 4.x C# compiler not found.'}
 # The scheduled reader must not own a console that can be closed accidentally.
-& $compiler /nologo /target:winexe /platform:x64 ('/reference:'+ $library) /reference:System.Web.Extensions.dll ('/out:'+(Join-Path $output 'CpuSensors.exe')) (Join-Path $sourceDirectory 'CpuSensors.cs') (Join-Path $sourceDirectory 'PowerSelection.cs') (Join-Path $sourceDirectory 'SensorFileSecurity.cs')
+& $compiler /nologo /target:winexe /platform:x64 ('/reference:'+ $library) /reference:System.Web.Extensions.dll ('/out:'+(Join-Path $output 'CpuSensors.exe')) (Join-Path $sourceDirectory 'CpuSensors.cs') (Join-Path $sourceDirectory 'PowerSelection.cs') (Join-Path $sourceDirectory 'SensorFileSecurity.cs') (Join-Path $sourceDirectory 'SnapshotPublisher.cs')
 if($LASTEXITCODE -ne 0){throw 'CPU sensor build failed.'}
 Write-Output ('CPU sensor built in '+$output)

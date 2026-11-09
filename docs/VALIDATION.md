@@ -49,3 +49,11 @@ scheduled background process has no console window to close accidentally.
 A console-style build was observed stopped with status 0xC000013A; its stale
 CPU snapshot correctly caused the agent to report combined power as N/A.
 Restarting the protected task restored fresh CPU readings and combined power.
+
+Snapshot-publication regression tests (`scripts/Test-SnapshotPublisher.ps1`)
+hold a real Windows file handle that denies delete sharing. They cover recovery
+within the retry window, a longer lock that preserves the previous complete
+snapshot, and successful publication after releasing that lock. Temporary-file
+cleanup and propagation of permission/non-sharing errors are also checked.
+The publisher always uses the protected snapshot creation routine and atomic
+replacement; it never truncates an existing snapshot to work around a lock.
